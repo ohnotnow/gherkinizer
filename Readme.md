@@ -55,7 +55,7 @@ To use this script:
 > I would like to add a new import to our Student Project web app.  It should let me upload an Excel file containing a project ID and a second supervisor GUID. Once uploaded I should be able to see the second supervisor listed in a table alongside the project and primary supervisor.  When students log in they should be able to see the second supervisor in brackets next to the primary supervisor for each project they can see.
 
 **Result**
-
+```
 **Initial Thoughts:**
 Certainly! Let's break down your feature request for the Student Project web app into individual components and considerations:
 
@@ -154,6 +154,7 @@ By considering these components and conditions, the development team can ensure 
 - And I am on the 'Available Projects' page
 - When I look at the list of projects
 - Then I should see the second supervisor's name in brackets next to the primary supervisor's name for each project
+```
 
 ## Contributing
 
