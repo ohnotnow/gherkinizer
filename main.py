@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
-
 from gepetto import mistral, gpt, groq, claude, ollama
+from yaspin import yaspin
 
 def get_chatbot():
     chatbot = None
@@ -17,6 +17,7 @@ def get_chatbot():
         chatbot = gpt.GPTModelSync()
     return chatbot
 
+@yaspin(text="Getting initial thoughts...", color="yellow")
 def get_initial_thoughts(user_request):
     system_prompt = """
         You are an AI assistant who is an expert at breaking down a non-IT users natural language feature requests for software
@@ -40,8 +41,9 @@ def get_initial_thoughts(user_request):
     bot = get_chatbot()
     response = bot.chat(messages)
 
-    return response.message
+    return response
 
+@yaspin(text="Getting user stories...", color="yellow")
 def get_user_stories(user_request, initial_thoughts):
     system_prompt = """
         You are an AI assistant who is an expert at reading a non-IT user request for new software features, an initial breakdown of the
@@ -52,15 +54,15 @@ def get_user_stories(user_request, initial_thoughts):
         break if there is any extra text.
 
         <example-output>
-        # Feature: As a user I want to sign in so I can see my marketing campaigns
+        ### Feature: As a user I want to sign in so I can see my marketing campaigns
 
-        ## Scenario: User supplies correct user name and password
+        #### Scenario: User supplies correct user name and password
         - Given that I am on the sign-in page
         - When I enter my user name and password correctly
         - And click 'Sign In'
         - Then I am taken to the dashboard
 
-        ## Scenario: User does NOT supply correct user name and password
+        #### Scenario: User does NOT supply correct user name and password
         - Given that I am on the sign-in page
         - When I enter my user name and password incorrectly
         - and click 'Sign In'
@@ -83,22 +85,30 @@ def get_user_stories(user_request, initial_thoughts):
     bot = get_chatbot()
     response = bot.chat(messages)
 
-    return response.message
+    return response
 
 def main():
+    total_cost = 0
+    start_time = datetime.now()
     request = input("Enter your feature request:\n")
-    final_output = ""
-    initial_thoughts = get_initial_thoughts(request)
-    final_output = f"Initial Thoughts:\n{initial_thoughts.strip()}\n\n"
-    print(final_output)
-    user_stories = get_user_stories(request, initial_thoughts)
-    final_output += f"User Stories:\n{user_stories.strip('```markdown').strip('```').strip()}"
-    print(f"User Stories:\n{user_stories.strip()}")
-    # save output to a file called 'user_stories_2024_01_01_12_00_00.md' (replace with current date and time)
+    final_output = f"# User Request\n\n> {request}\n\n"
+    response = get_initial_thoughts(request)
+    total_cost += response.cost
+    initial_thoughts = response.message
+    final_output += f"## Initial Thoughts:\n{initial_thoughts.strip()}\n\n"
+    response = get_user_stories(request, initial_thoughts)
+    total_cost += response.cost
+    user_stories = response.message
+    final_cost = f"\n\n#### Stats\n\n- Total Cost: US${round(total_cost, 4)}"
+    final_output += f"## User Stories:\n{user_stories.strip('```markdown').strip('```').strip()}"
+    final_output += final_cost
+    end_time = datetime.now()
+    time_taken = round((end_time - start_time).total_seconds(), 2)
+    final_output += f"\n\n- Time taken: {time_taken} seconds"
     filename = f"user_stories_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.md"
     with open(filename, "w") as f:
         f.write(final_output)
-        print(f"\n\nUser Stories saved to file : {filename}\n\n")
+        print(f"\n\nResults saved to file : {filename}\n\n")
 
 
 if __name__ == "__main__":
