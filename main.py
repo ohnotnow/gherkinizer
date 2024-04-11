@@ -118,6 +118,9 @@ def main():
         conversation.append(
             {"role": "user", "content": answer}
         )
+        if len(conversation) > 8:
+            finished_asking_clarifying_questions = True
+            break
 
     if len(conversation) > 2:
         final_output += f"## Clarifying Questions\n\n"
