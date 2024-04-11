@@ -92,7 +92,39 @@ def main():
     start_time = datetime.now()
     request = input("Enter your feature request:\n")
     final_output = f"# User Request\n\n> {request}\n\n"
-    response = get_initial_thoughts(request)
+    finished_asking_clarifying_questions = False
+    conversation = [
+        {
+            "role": "system",
+            "content": f"You are an AI assistant who is an expert at asking clarifying questions ONE AT A TIME about non-IT users natural language feature requests for software applications.  You should ask questions to get more information about the feature request in order to help developers understand the exact nature of the request. Remember to only ask them one question at a time so they are not overwhelmed. The USER is non-technical so might not be able to answer a technically worded question. If you do not need to ask any more questions please reply with simple the word 'COMPLETE'."
+        },
+        {
+            "role": "user",
+            "content": f"I need a feature to be developed.  Could you help me by asking some clarifying questions?  My feature request is : {request}"
+        },
+    ]
+    bot = get_chatbot()
+    while not finished_asking_clarifying_questions:
+        response = bot.chat(conversation)
+        total_cost += response.cost
+        if response.message.startswith("COMPLETE"):
+            finished_asking_clarifying_questions = True
+            break
+        print(f"\n\nQ. {response.message}\n\n")
+        answer = input("A. ")
+        conversation.append(
+            {"role": "assistant", "content": response.message}
+        )
+        conversation.append(
+            {"role": "user", "content": answer}
+        )
+
+    if len(conversation) > 2:
+        final_output += f"## Clarifying Questions\n\n"
+        for i in range(2, len(conversation), 2):
+            final_output += f"**Q. {conversation[i]['content']}**\n\n**A.** {conversation[i+1]['content']}\n\n"
+
+    response = get_initial_thoughts(final_output)
     total_cost += response.cost
     initial_thoughts = response.message
     final_output += f"## Initial Thoughts:\n{initial_thoughts.strip()}\n\n"
