@@ -89,7 +89,6 @@ def get_user_stories(user_request, initial_thoughts):
 
 def main():
     total_cost = 0
-    start_time = datetime.now()
     request = input("Enter your feature request:\n")
     final_output = f"# User Request\n\n> {request}\n\n"
     finished_asking_clarifying_questions = False
@@ -104,6 +103,7 @@ def main():
         },
     ]
     bot = get_chatbot()
+    start_time_clarifying = datetime.now()
     while not finished_asking_clarifying_questions:
         response = bot.chat(conversation)
         total_cost += response.cost
@@ -118,7 +118,7 @@ def main():
         conversation.append(
             {"role": "user", "content": answer}
         )
-        if len(conversation) > 8:
+        if len(conversation) > 14:
             finished_asking_clarifying_questions = True
             break
 
@@ -127,6 +127,8 @@ def main():
         for i in range(2, len(conversation), 2):
             final_output += f"**Q. {conversation[i]['content']}**\n\n**A.** {conversation[i+1]['content']}\n\n"
 
+    stop_time_clarifying = datetime.now()
+    start_time_llm = datetime.now()
     response = get_initial_thoughts(final_output)
     total_cost += response.cost
     initial_thoughts = response.message
@@ -137,9 +139,11 @@ def main():
     final_cost = f"\n\n#### Stats\n\n- Total Cost: US${round(total_cost, 4)}"
     final_output += f"## User Stories:\n{user_stories.strip('```markdown').strip('```').strip()}"
     final_output += final_cost
-    end_time = datetime.now()
-    time_taken = round((end_time - start_time).total_seconds(), 2)
-    final_output += f"\n\n- Time taken: {time_taken} seconds"
+    end_time_llm = datetime.now()
+    total_time_taken = round((end_time_llm - start_time_clarifying).total_seconds(), 2)
+    total_time_clarifying = round((stop_time_clarifying - start_time_clarifying).total_seconds(), 2)
+    total_time_llm = round((end_time_llm - start_time_llm).total_seconds(), 2)
+    final_output += f"\n\n- Time taken: {total_time_taken} seconds (Clarifying: {total_time_clarifying} seconds, LLM: {total_time_llm} seconds)\n\n"
     filename = f"user_stories_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.md"
     with open(filename, "w") as f:
         f.write(final_output)
