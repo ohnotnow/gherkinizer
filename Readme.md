@@ -18,6 +18,8 @@ To run this script, you'll need Python installed on your machine along with seve
     This script requires specific Python libraries. You can install them using pip:
 
     ```bash
+    python -mvenv venv
+    source venv/bin/activate
     pip install -r requirements.txt
     ```
 
